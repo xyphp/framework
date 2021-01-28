@@ -2,7 +2,7 @@
 /**
  * app核心模块
  */
-namespace framework;
+namespace xy\framework;
 /**
  * app核心类
  * @package framework
