@@ -1,9 +1,9 @@
 <?php
 
-namespace xy\framework\components\container;
+namespace xy\framework\components\container\interfaces;
 /**
  * Interface xyContainerInterface
- * @package xy\framework\components\container
+ * @package xy\framework\component\container
  */
 interface xyContainerInterface
 {

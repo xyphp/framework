@@ -1,6 +1,6 @@
 <?php
 
-namespace xy\framework\components\container\exception;
+namespace xy\framework\components\container\exceptions;
 
 use Psr\Container\ContainerExceptionInterface;
 use \Error;

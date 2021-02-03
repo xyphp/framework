@@ -4,10 +4,16 @@ namespace xy\framework\components\container;
 
 use Psr\Container\ContainerInterface;
 use \ReflectionClass;
-use xy\framework\components\container\exception\containerException;
-use xy\framework\components\container\exception\notFoundException;
+use \Exception;
+use \Error;
+use xy\framework\components\container\interfaces\xyContainerInterface;
+use xy\framework\components\container\exceptions\containerException;
+use xy\framework\components\container\exceptions\notFoundException;
 
-
+/**
+ * 容器
+ * @package xy\framework\component\container
+ */
 class container implements ContainerInterface, xyContainerInterface
 {
     public static $instance = [];
@@ -19,12 +25,12 @@ class container implements ContainerInterface, xyContainerInterface
      */
     public function get($name)
     {
-        try{
+        try {
             $has = self::has($name);
             if ($has) {
                 return self::$instance[$name];
             }
-        }catch (Error $e) {
+        } catch (Error $e) {
             throw new containerException($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
 
@@ -47,17 +53,23 @@ class container implements ContainerInterface, xyContainerInterface
      * @param string  $className  类名
      * @param array   $userParams 用户自定义参数（类对象参数除外的普通参数）
      * @param boolean $rebind     是否强制绑定
-     * @return mixed
+     * @return ReflectionClass|boolean
      */
     public static function bind($name, $className, $userParams = [], $rebind = false)
     {
-        $has = self::has($name);
-        if ($rebind || !$has) {
-            $paramArr              = self::getMethodParams($className, '__construct', $userParams);
-            self::$instance[$name] = (new ReflectionClass($className))->newInstanceArgs($paramArr);
+        try{
+            $has = self::has($name);
+            if ($rebind || !$has) {
+                $paramArr              = self::getMethodParams($className, '__construct', $userParams);
+                self::$instance[$name] = (new ReflectionClass($className))->newInstanceArgs($paramArr);
+            }
+        }catch (Error $e){
+            throw new containerException($e->getMessage(), $e->getCode(), $e->getPrevious());
+        }catch(Exception $e){
+            throw new containerException($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
 
-        return self::$instance[$name];
+        return isset(self::$instance[$name]) ? self::$instance[$name] : false;
     }
 
     /**
@@ -74,10 +86,21 @@ class container implements ContainerInterface, xyContainerInterface
         // 获取类的实例
         $constructParams = ($methodName == '__construct') ? $params : [];
         $instance        = self::bind($className, $className, $constructParams);
-        // 获取该方法所需要依赖注入的参数
-        $paramArr = self::getMethodParams($className, $methodName, $params);
+        try{
+            if ($instance->hasMethod($methodName)) {
+                // 获取该方法所需要依赖注入的参数
+                $paramArr = self::getMethodParams($className, $methodName, $params);
 
-        return $instance->{$methodName}(...$paramArr);
+                return $instance->{$methodName}(...$paramArr);
+            }else{
+                throw new notFoundException($className . '中不存在方法' . $methodName);
+            }
+        }catch (Error $e){
+            throw new containerException($e->getMessage(), $e->getCode(), $e->getPrevious());
+        }catch(Exception $e){
+            throw new containerException($e->getMessage(), $e->getCode(), $e->getPrevious());
+        }
+
     }
 
     /**

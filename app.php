@@ -9,5 +9,9 @@ namespace xy\framework;
  */
 class app
 {
+    public function __construct($publicRoot='')
+    {
+
+    }
 
 }
